@@ -1,14 +1,17 @@
 using CachingWebAPI.Models;
+using CachingWebAPI.Services;
 
 namespace CachingWebAPI.Data;
 
 public class DriversRepository : IDriversRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly ICacheService _cacheService;
 
-    public DriversRepository(AppDbContext dbContext)
+    public DriversRepository(AppDbContext dbContext, ICacheService cacheService)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
     }
 
     public async Task<Driver?> AddAsync(Driver driver)
@@ -41,8 +44,11 @@ public class DriversRepository : IDriversRepository
         if (driver == null)
             return false;
 
+        await _cacheService.RemoveDataAsync($"Driver_{driver.Number}");
+
         _dbContext.Drivers.Remove(driver);
 
-        return true;
+        var count = await _dbContext.SaveChangesAsync();
+        return count > 0;
     }
 }

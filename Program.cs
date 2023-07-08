@@ -1,13 +1,19 @@
+using System;
 using CachingWebAPI.Data;
 using CachingWebAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string dbConnectionString = builder.Configuration.GetConnectionString("Default");
+string dbPassword = Environment.GetEnvironmentVariable("DbPassword");
+
+dbConnectionString = dbConnectionString.Replace("{PASS}", dbPassword);
+
 // Add ConnectionStrings
 builder.Services.AddEntityFrameworkNpgsql()
        .AddDbContext<AppDbContext>(
-        opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
+        opt => opt.UseNpgsql(dbConnectionString)
        );
 
 builder.Services.AddScoped<ICacheService, CacheService>();
